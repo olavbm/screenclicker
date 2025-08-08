@@ -1,0 +1,9 @@
+README.md
+setup.py
+screenclicker/__init__.py
+screenclicker.egg-info/PKG-INFO
+screenclicker.egg-info/SOURCES.txt
+screenclicker.egg-info/dependency_links.txt
+screenclicker.egg-info/requires.txt
+screenclicker.egg-info/top_level.txt
+tests/test_screenclicker.py
