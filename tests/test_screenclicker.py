@@ -4,7 +4,9 @@ import time
 import pytest
 import subprocess
 import uinput
-from screenclicker import right_click, left_click, text
+import os
+import tempfile
+from screenclicker import right_click, left_click, text, screenshot, screenshot_region, get_screen_info, move_mouse
 
 
 class TerminalManager:
@@ -109,6 +111,26 @@ def test_mouse_coordinates():
     print("✓ Mouse coordinate handling working")
 
 
+def test_cursor_movement():
+    """Test cursor movement functionality."""
+    print("\n=== Testing Cursor Movement ===")
+    
+    # Test cursor movement to various positions
+    test_positions = [
+        (200, 200),   # Top-left area
+        (960, 540),   # Center screen  
+        (1500, 800),  # Bottom-right area
+        (100, 900),   # Bottom-left area
+        (1800, 100),  # Top-right area
+    ]
+    
+    for x, y in test_positions:
+        assert move_mouse(x, y) is True
+        time.sleep(0.2)  # Pause to see movement
+    
+    print("✓ Cursor movement working")
+
+
 def test_text_input_scenarios():
     """Test various text input scenarios."""
     print("\n=== Testing Text Input Scenarios ===")
@@ -128,6 +150,80 @@ def test_text_input_scenarios():
         time.sleep(0.1)
     
     print("✓ Text input scenarios working")
+
+
+def test_screenshot_functionality():
+    """Test screenshot capture functionality."""
+    print("\n=== Testing Screenshot Functions ===")
+    
+    # Test basic screenshot to file
+    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+        tmp_path = tmp_file.name
+    
+    try:
+        result = screenshot(tmp_path)
+        assert result is True
+        assert os.path.exists(tmp_path)
+        assert os.path.getsize(tmp_path) > 0
+        print("✓ Screenshot to file working")
+        
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+    
+    # Test screenshot returning bytes
+    screenshot_bytes = screenshot()
+    assert isinstance(screenshot_bytes, bytes)
+    assert len(screenshot_bytes) > 0
+    assert screenshot_bytes.startswith(b'\x89PNG')  # PNG signature
+    print("✓ Screenshot bytes return working")
+    
+    # Test region screenshot
+    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
+        tmp_path = tmp_file.name
+    
+    try:
+        result = screenshot_region(0, 0, 300, 200, tmp_path)
+        assert result is True
+        assert os.path.exists(tmp_path)
+        assert os.path.getsize(tmp_path) > 0
+        print("✓ Region screenshot working")
+        
+    finally:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+    
+    # Test region screenshot returning bytes
+    region_bytes = screenshot_region(0, 0, 100, 100)
+    assert isinstance(region_bytes, bytes)
+    assert len(region_bytes) > 0
+    assert region_bytes.startswith(b'\x89PNG')
+    print("✓ Region screenshot bytes working")
+
+
+def test_screen_info():
+    """Test screen information functionality.""" 
+    print("\n=== Testing Screen Info ===")
+    
+    info = get_screen_info()
+    assert isinstance(info, dict)
+    assert 'monitors' in info
+    assert isinstance(info['monitors'], list)
+    assert len(info['monitors']) > 0
+    
+    # Check first monitor has expected fields
+    monitor = info['monitors'][0]
+    required_fields = ['name', 'x', 'y', 'width', 'height', 'primary']
+    for field in required_fields:
+        assert field in monitor
+        
+    # Basic validation
+    assert monitor['width'] > 0
+    assert monitor['height'] > 0
+    assert isinstance(monitor['x'], int)
+    assert isinstance(monitor['y'], int)
+    
+    print(f"✓ Screen info detected {len(info['monitors'])} monitor(s)")
 
 
 @pytest.mark.slow

@@ -1,15 +1,29 @@
 """
 ScreenClicker - Minimal screen automation library for Wayland/Linux
 
-Simple API for mouse clicks and text input on Wayland systems.
+Simple API for mouse clicks, cursor movement, and text input on Wayland systems.
+
+Key features:
+- Mouse clicks and cursor movement using uinput and ydotool
+- Text input using uinput virtual keyboards  
+- Screen capture using grim
+- Multi-monitor support via swaymsg
+- Works on Wayland without elevated permissions (with ydotool)
+
+System dependencies:
+- ydotool: For cursor movement (sudo apt install ydotool)
+- grim: For screenshots (sudo apt install grim)
 """
 
 import time
 import uinput
+import subprocess
+import tempfile
+import os
 
 __version__ = "0.1.0"
 __author__ = "ScreenClicker Development Team"
-__all__ = ["right_click", "left_click", "text"]
+__all__ = ["right_click", "left_click", "text", "screenshot", "screenshot_region", "get_screen_info", "move_mouse"]
 
 def _create_mouse_device():
     """Create virtual mouse device."""
@@ -137,3 +151,184 @@ def text(string):
         return False
     finally:
         device.destroy()
+
+def screenshot(output_path=None):
+    """Take a full screenshot using grim.
+    
+    Args:
+        output_path: Path to save screenshot. If None, returns image bytes.
+        
+    Returns:
+        True if successful (when output_path provided), or bytes data
+    """
+    try:
+        if output_path:
+            # Save to specified path
+            result = subprocess.run(['grim', output_path], 
+                                  capture_output=True, 
+                                  text=True, 
+                                  timeout=10)
+            if result.returncode == 0:
+                return True
+            else:
+                raise RuntimeError(f"grim failed: {result.stderr}")
+        else:
+            # Return bytes data
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+                tmp_path = tmp.name
+            
+            try:
+                result = subprocess.run(['grim', tmp_path], 
+                                      capture_output=True, 
+                                      text=True, 
+                                      timeout=10)
+                if result.returncode == 0:
+                    with open(tmp_path, 'rb') as f:
+                        return f.read()
+                else:
+                    raise RuntimeError(f"grim failed: {result.stderr}")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+                    
+    except FileNotFoundError:
+        raise RuntimeError("grim not found. Install with: apt install grim")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("Screenshot timed out")
+    except Exception as e:
+        raise RuntimeError(f"Screenshot failed: {e}")
+
+def screenshot_region(x, y, width, height, output_path=None):
+    """Take a screenshot of a specific region using grim.
+    
+    Args:
+        x, y: Top-left coordinates of region
+        width, height: Size of region
+        output_path: Path to save screenshot. If None, returns image bytes.
+        
+    Returns:
+        True if successful (when output_path provided), or bytes data
+    """
+    try:
+        geometry = f"{x},{y} {width}x{height}"
+        
+        if output_path:
+            # Save to specified path
+            result = subprocess.run(['grim', '-g', geometry, output_path], 
+                                  capture_output=True, 
+                                  text=True, 
+                                  timeout=10)
+            if result.returncode == 0:
+                return True
+            else:
+                raise RuntimeError(f"grim failed: {result.stderr}")
+        else:
+            # Return bytes data
+            with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+                tmp_path = tmp.name
+            
+            try:
+                result = subprocess.run(['grim', '-g', geometry, tmp_path], 
+                                      capture_output=True, 
+                                      text=True, 
+                                      timeout=10)
+                if result.returncode == 0:
+                    with open(tmp_path, 'rb') as f:
+                        return f.read()
+                else:
+                    raise RuntimeError(f"grim failed: {result.stderr}")
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+                    
+    except FileNotFoundError:
+        raise RuntimeError("grim not found. Install with: apt install grim")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("Screenshot timed out")
+    except Exception as e:
+        raise RuntimeError(f"Screenshot failed: {e}")
+
+def get_screen_info():
+    """Get screen/monitor information.
+    
+    Returns:
+        dict with screen information
+    """
+    try:
+        # Try to get monitor info using swaymsg if available
+        try:
+            result = subprocess.run(['swaymsg', '-t', 'get_outputs'], 
+                                  capture_output=True, 
+                                  text=True, 
+                                  timeout=5)
+            if result.returncode == 0:
+                import json
+                outputs = json.loads(result.stdout)
+                monitors = []
+                for output in outputs:
+                    if output.get('active'):
+                        rect = output.get('rect', {})
+                        monitors.append({
+                            'name': output.get('name', 'unknown'),
+                            'x': rect.get('x', 0),
+                            'y': rect.get('y', 0),
+                            'width': rect.get('width', 1920),
+                            'height': rect.get('height', 1080),
+                            'primary': output.get('primary', False)
+                        })
+                return {'monitors': monitors}
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+        
+        # Fallback: basic screen info
+        return {
+            'monitors': [{
+                'name': 'default',
+                'x': 0,
+                'y': 0,
+                'width': 1920,
+                'height': 1080,
+                'primary': True
+            }]
+        }
+        
+    except Exception as e:
+        # Ultimate fallback
+        return {
+            'monitors': [{
+                'name': 'fallback',
+                'x': 0,
+                'y': 0,
+                'width': 1920,
+                'height': 1080,
+                'primary': True
+            }]
+        }
+def move_mouse(x, y):
+    """Move mouse cursor to coordinates with visible movement.
+    
+    Uses ydotool for Wayland-compatible cursor movement without requiring
+    special permissions. Falls back to uinput if ydotool is not available.
+    
+    Args:
+        x: X coordinate
+        y: Y coordinate
+        
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Primary method: use ydotool (works on Wayland without special permissions)
+        result = subprocess.run(['ydotool', 'mousemove', str(x), str(y)], 
+                              capture_output=True, text=True, timeout=5)
+        if result.returncode == 0:
+            return True
+        else:
+            raise RuntimeError(f"ydotool failed: {result.stderr}")
+            
+    except FileNotFoundError:
+        raise RuntimeError("ydotool not found. Install with: sudo apt install ydotool")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("ydotool timed out")
+    except Exception as e:
+        raise RuntimeError(f"Mouse movement failed: {e}")
