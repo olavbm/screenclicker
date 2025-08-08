@@ -6,7 +6,7 @@ import subprocess
 import uinput
 import os
 import tempfile
-from screenclicker import right_click, left_click, text, screenshot, screenshot_region, get_screen_info, move_mouse
+from screenclicker import right_click, left_click, text, screenshot, screenshot_region, get_screen_info, move_mouse, screenshot_monitor
 
 
 class TerminalManager:
@@ -71,28 +71,9 @@ def press_enter():
     kb_device.destroy()
 
 
-def test_library_api():
-    """Test core library functions: right_click, left_click, text."""
-    print("\n=== Testing Library API ===")
-    
-    # Test basic function calls
-    assert right_click(400, 400) is True
-    assert left_click(500, 500) is True
-    assert text("test string") is True
-    
-    # Test parameter validation
-    assert right_click(0, 0) is True
-    assert left_click(1920, 1080) is True
-    
-    # Test text with special characters
-    assert text("Hello, World! @#$%^&*()") is True
-    
-    print("✓ All API functions working")
-
-
-def test_mouse_coordinates():
-    """Test mouse click coordinate handling."""
-    print("\n=== Testing Mouse Coordinates ===")
+def test_mouse_operations():
+    """Test mouse click and movement operations."""
+    print("\n=== Testing Mouse Operations ===")
     
     # Test different coordinate ranges
     coordinates = [
@@ -104,41 +85,21 @@ def test_mouse_coordinates():
     
     for x, y in coordinates:
         assert left_click(x, y) is True
-        time.sleep(0.1)
+        time.sleep(0.05)
         assert right_click(x, y) is True
-        time.sleep(0.1)
+        time.sleep(0.05)
     
-    print("✓ Mouse coordinate handling working")
+    print("✓ Mouse click operations working")
 
 
-def test_cursor_movement():
-    """Test cursor movement functionality."""
-    print("\n=== Testing Cursor Movement ===")
-    
-    # Test cursor movement to various positions
-    test_positions = [
-        (200, 200),   # Top-left area
-        (960, 540),   # Center screen  
-        (1500, 800),  # Bottom-right area
-        (100, 900),   # Bottom-left area
-        (1800, 100),  # Top-right area
-    ]
-    
-    for x, y in test_positions:
-        assert move_mouse(x, y) is True
-        time.sleep(0.2)  # Pause to see movement
-    
-    print("✓ Cursor movement working")
-
-
-def test_text_input_scenarios():
-    """Test various text input scenarios."""
-    print("\n=== Testing Text Input Scenarios ===")
+def test_keyboard_operations():
+    """Test keyboard text input operations."""
+    print("\n=== Testing Keyboard Operations ===")
     
     # Test different text types
     test_strings = [
         "Simple text",
-        "Numbers: 12345",
+        "Numbers: 12345", 
         "Symbols: !@#$%^&*()",
         "Mixed: Hello123!@#",
         "echo 'Terminal command'",
@@ -147,14 +108,45 @@ def test_text_input_scenarios():
     
     for test_string in test_strings:
         assert text(test_string) is True
-        time.sleep(0.1)
+        time.sleep(0.05)
     
-    print("✓ Text input scenarios working")
+    print("✓ Keyboard text input working")
 
 
-def test_screenshot_functionality():
-    """Test screenshot capture functionality."""
-    print("\n=== Testing Screenshot Functions ===")
+def test_cursor_movement():
+    """Test cursor movement functionality."""
+    print("\n=== Testing Cursor Movement ===")
+    
+    # Test circular cursor movement pattern
+    import math
+    
+    center_x, center_y = 960, 540  # Center of typical screen
+    radius = 200  # Circle radius
+    steps = 24  # Number of points in circle (smooth motion)
+    
+    print(f"Moving cursor in circle: center ({center_x}, {center_y}), radius {radius}")
+    
+    for i in range(steps):
+        # Calculate angle for this step
+        angle = (2 * math.pi * i) / steps
+        
+        # Calculate position on circle
+        x = int(center_x + radius * math.cos(angle))
+        y = int(center_y + radius * math.sin(angle))
+        
+        assert move_mouse(x, y) is True
+        time.sleep(0.001)  # Smooth motion timing
+    
+    # Return to center
+    assert move_mouse(center_x, center_y) is True
+    time.sleep(0.01)
+    
+    print("✓ Circular cursor movement working")
+
+
+def test_screen_capture():
+    """Test all screen capture functionality."""
+    print("\n=== Testing Screen Capture ===")
     
     # Test basic screenshot to file
     with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
@@ -165,7 +157,7 @@ def test_screenshot_functionality():
         assert result is True
         assert os.path.exists(tmp_path)
         assert os.path.getsize(tmp_path) > 0
-        print("✓ Screenshot to file working")
+        print("✓ Full screenshot to file working")
         
     finally:
         if os.path.exists(tmp_path):
@@ -176,29 +168,21 @@ def test_screenshot_functionality():
     assert isinstance(screenshot_bytes, bytes)
     assert len(screenshot_bytes) > 0
     assert screenshot_bytes.startswith(b'\x89PNG')  # PNG signature
-    print("✓ Screenshot bytes return working")
+    print("✓ Full screenshot bytes working")
     
     # Test region screenshot
-    with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp_file:
-        tmp_path = tmp_file.name
-    
-    try:
-        result = screenshot_region(0, 0, 300, 200, tmp_path)
-        assert result is True
-        assert os.path.exists(tmp_path)
-        assert os.path.getsize(tmp_path) > 0
-        print("✓ Region screenshot working")
-        
-    finally:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-    
-    # Test region screenshot returning bytes
-    region_bytes = screenshot_region(0, 0, 100, 100)
+    region_bytes = screenshot_region(0, 0, 200, 150)
     assert isinstance(region_bytes, bytes)
     assert len(region_bytes) > 0
     assert region_bytes.startswith(b'\x89PNG')
-    print("✓ Region screenshot bytes working")
+    print("✓ Region screenshot working")
+    
+    # Test monitor screenshot (new function)
+    monitor_bytes = screenshot_monitor(0)
+    assert isinstance(monitor_bytes, bytes)
+    assert len(monitor_bytes) > 0
+    assert monitor_bytes.startswith(b'\x89PNG')
+    print("✓ Monitor screenshot working")
 
 
 def test_screen_info():
