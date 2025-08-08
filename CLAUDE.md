@@ -1,87 +1,130 @@
-# Screen Clicker - Python Automation for Wayland
+# ScreenClicker - Wayland Automation Library
 
-A Python-based screen automation toolkit that works on Wayland/Sway systems, providing both mouse and keyboard control capabilities.
+A professional Python library for screen automation that works on Wayland/Sway systems. Provides a minimal, clean API for mouse clicks and keyboard input that bypasses Wayland security restrictions.
 
 ## Project Overview
 
-This project successfully implements screen automation on Wayland Linux systems, which typically block traditional mouse automation due to security restrictions. The solution uses low-level input devices to bypass these limitations.
+This project solves the fundamental challenge of screen automation on Wayland Linux systems, where traditional automation libraries are blocked by security restrictions. The solution uses low-level `uinput` virtual devices to provide reliable mouse and keyboard control.
 
-## Key Files
+## Library Structure
 
-### Core Functionality
-- **`clicker.py`** - Main mouse automation module using uinput
-  - `right_click(x, y)` - Right click at absolute coordinates
-  - `move_mouse_circle(center_x, center_y, radius, duration)` - Smooth circular mouse movement
-  - Creates virtual mouse devices that work on Wayland
+### Core Library (`screenclicker/`)
+- **`__init__.py`** - Main library API with three simple functions:
+  - `right_click(x, y)` - Right click at coordinates using uinput
+  - `left_click(x, y)` - Left click at coordinates using uinput  
+  - `text(string)` - Type text using uinput keyboard controller
 
-- **`debug_input.py`** - Keyboard automation and system analysis
-  - Comprehensive keyboard input functions using pynput
-  - System environment detection (compositor type, input capabilities)
-  - Text typing, key combinations, and navigation helpers
+### Testing Suite (`tests/`)
+- **`test_screenclicker.py`** - Comprehensive test suite covering all functionality:
+  - Core API functions (right_click, left_click, text)
+  - Mouse coordinate handling and validation
+  - Text input scenarios with various character sets
+  - Terminal automation workflows
+  - Integration testing (mouse + keyboard operations)
 
-- **`uinput_clicker.py`** - Extended mouse testing and functionality
-  - Both relative and absolute mouse positioning
-  - Comprehensive mouse button support (left, right, middle)
-  - Detailed testing and debugging capabilities
+### Package Structure
+- **`setup.py`** - Package configuration and dependencies
+- **`pytest.ini`** - Test configuration and markers
+- **`requirements.txt`** - Project dependencies
+- **`README.md`** - Quick start guide and usage
 
 ## Technical Implementation
 
-### Mouse Control (Wayland Solution)
+### Mouse Control (uinput Solution)
 - **Problem**: Wayland security model blocks traditional mouse automation libraries (pynput, pyautogui)
-- **Solution**: Uses Linux uinput kernel module to create virtual input devices
-- **Requirements**: 
-  - `python-uinput` library
-  - Proper uinput permissions (usually works without root on modern systems)
+- **Solution**: Uses Linux uinput kernel module to create virtual mouse devices
+- **Status**: ✅ **Fully Working** - bypasses Wayland restrictions completely
 
-### Keyboard Control (Works Natively)
-- **Library**: pynput (works on Wayland for keyboard input)
-- **Capabilities**: Text typing, key combinations, navigation keys
-- **Status**: Fully functional without special permissions
+### Keyboard Control (Pure uinput Solution)
+- **Implementation**: Uses uinput virtual devices for all keyboard input
+- **Advantage**: Consistent behavior across all applications (existing and newly spawned)
+- **Discovery**: Pure uinput approach provides most reliable text input on Wayland
+- **Status**: ✅ **Fully Working** with unified uinput implementation
+
+### Key Breakthroughs
+1. **Mouse automation**: uinput virtual devices bypass Wayland mouse restrictions
+2. **Keyboard automation**: Pure uinput solution provides consistent text input across all applications
+3. **Terminal automation**: Direct process launch + uinput input works reliably for complex workflows
+4. **Test methodology**: Streamlined pytest suite efficiently validates all core functionality
 
 ## Dependencies
 
-- `python-uinput>=1.0.1` - Low-level input device creation
-- `pynput` - Keyboard automation (works on Wayland)
+- `python-uinput>=1.0.1` - Low-level input device creation for mouse and keyboard
+- `pytest>=7.0.0` - Testing framework
 
 ## Usage Examples
 
 ```python
-# Mouse automation
-from clicker import right_click, move_mouse_circle
+# Simple API - works on Wayland/Sway
+from screenclicker import right_click, left_click, text
 
-right_click(400, 400)  # Right click at coordinates
-move_mouse_circle(500, 400, 150, 5.0)  # Draw circle
+# Mouse clicks (using uinput)
+right_click(400, 400)   # Right click at coordinates
+left_click(500, 300)    # Left click at coordinates
 
-# Keyboard automation  
-from debug_input import test_direct_typing
-test_direct_typing()  # Type test text
+# Text input (using uinput)
+text("Hello from ScreenClicker!")  # Type text
+
+# Terminal automation example
+import subprocess
+process = subprocess.Popen(['foot'])  # Open terminal
+time.sleep(2)
+left_click(960, 540)  # Focus terminal
+text("echo 'Automation works!'")  # Type command
 ```
 
 ## Environment Compatibility
 
 - **OS**: Linux with Wayland compositor
-- **Tested on**: Sway window manager
-- **Mouse**: ✅ Works via uinput virtual devices
-- **Keyboard**: ✅ Works natively via pynput
+- **Tested on**: Sway window manager with dual monitor setup
+- **Mouse**: ✅ **Fully Working** via uinput virtual devices
+- **Keyboard**: ✅ **Fully Working** via pure uinput implementation
+- **Terminal automation**: ✅ **Fully Working** with direct process management
 
-## Development History
+## Testing & Quality Assurance
 
-1. **Initial Challenge**: Standard mouse libraries (pynput) were blocked by Wayland security
-2. **Discovery**: Keyboard automation worked immediately with pynput
-3. **Research Phase**: Investigated various Wayland-specific solutions
-4. **Breakthrough**: uinput approach successfully bypassed Wayland restrictions
-5. **Implementation**: Built working mouse control with absolute positioning and smooth movement
+**Test Suite**: 5 comprehensive tests using pytest (streamlined from 18 redundant tests)
+- **Fast tests** (3): Core API validation, coordinate handling, text input scenarios
+- **Slow tests** (2): Terminal automation workflows, integration testing
+- **Test coverage**:
+  - `test_library_api()` - Core function validation (right_click, left_click, text)
+  - `test_mouse_coordinates()` - Mouse coordinate handling across screen areas
+  - `test_text_input_scenarios()` - Various text types including symbols and commands
+  - `test_terminal_automation()` - Complete terminal workflow automation (slow)
+  - `test_integration_workflow()` - Combined mouse + keyboard operations (slow)
 
-## Security Notes
+**Run tests**:
+```bash
+pytest                    # All tests (includes visual verification)
+pytest -m "not slow"      # Fast tests only (3 tests)
+pytest tests/test_screenclicker.py  # Run specific test file
+```
 
-- Mouse control requires uinput access (typically available to regular users)
-- Creates virtual input devices that the system treats as hardware
-- Keyboard automation works within normal Wayland security boundaries
-- No root privileges required for standard usage
+## Development Journey
 
-## Future Enhancements
+1. **Initial Challenge**: Standard automation libraries blocked by Wayland security
+2. **Mouse Solution**: uinput virtual devices bypass Wayland mouse restrictions  
+3. **Keyboard Evolution**: Started with dual approach (pynput + uinput), refined to pure uinput
+4. **Terminal Breakthrough**: Direct process launch + click-to-focus + uinput input works reliably
+5. **Library Design**: Minimal 3-function API with streamlined testing (reduced from 18 to 5 tests)
+6. **Final Achievement**: Production-ready Wayland automation solution with proven real-world workflows
 
-- Screen coordinate detection and window targeting
-- Integration with Sway-specific window management commands  
-- Extended gesture and pattern movement functions
-- Multi-monitor coordinate mapping
+## Architecture & Security
+
+- **Mouse control**: Creates virtual mouse devices via uinput (no root required)
+- **Keyboard input**: Pure uinput virtual devices for consistent cross-application input
+- **Process management**: Direct subprocess control for reliable application launching
+- **Focus management**: Click-to-focus ensures input reaches correct applications
+- **Wayland compliance**: Works within security model by using kernel-level virtual devices
+
+## Real-World Applications
+
+**Proven working scenarios**:
+- ✅ Mouse clicking at specific coordinates across multi-monitor setups
+- ✅ Text input with special characters, symbols, and command strings
+- ✅ Terminal automation workflows (open → type commands → execute → close)
+- ✅ Application launching and focus management
+- ✅ Integration workflows combining mouse and keyboard operations
+- ✅ Cross-application input consistency (existing and newly spawned processes)
+
+**Production ready**: Streamlined library with minimal dependencies provides reliable automation for GUI testing, process automation, and interactive scripting on Wayland systems.
