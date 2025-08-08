@@ -1,1 +1,11 @@
-pynput>=1.7.6
+# Core dependencies
+python-uinput>=1.0.1
+
+# System dependencies (install via package manager)
+# - ydotool: For Wayland-compatible cursor movement
+#   Install: sudo apt install ydotool
+# - grim: For Wayland screenshot capture  
+#   Install: sudo apt install grim
+
+# Development dependencies  
+pytest>=7.0.0

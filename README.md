@@ -1,52 +1,58 @@
-# Screen Clicker - Wayland Python Automation
+# ScreenClicker - Wayland Automation Library
 
-Python screen automation that works on **Wayland/Sway** systems.
-
-## System Requirements
-
-- **OS**: Linux with Wayland compositor  
-- **Tested on**: Sway window manager
-- **Python**: 3.6+
+Professional Python library for screen automation and capture on **Wayland/Sway** systems.
 
 ## Installation
 
 ```bash
-pip install python-uinput pynput
+pip install python-uinput
 ```
 
 ## Usage
 
-### Mouse Control
 ```python
-from clicker import right_click, move_mouse_circle
+from screenclicker import right_click, left_click, text, screenshot, screenshot_region, get_screen_info
 
-# Right click at coordinates
-right_click(400, 400)
+# Mouse clicks
+right_click(400, 400)   # Right click at coordinates
+left_click(500, 300)    # Left click at coordinates
 
-# Move mouse in a circle
-move_mouse_circle(center_x=500, center_y=400, radius=150, duration=5.0)
+# Text input
+text("Hello from ScreenClicker!")  # Type text
+
+# Screenshot capture
+screenshot("full_screen.png")       # Save full screenshot
+screenshot_bytes = screenshot()     # Get screenshot as bytes
+
+# Region capture  
+screenshot_region(0, 0, 500, 300, "region.png")  # Capture specific area
+region_bytes = screenshot_region(100, 100, 200, 150)  # Region as bytes
+
+# Monitor information
+info = get_screen_info()           # Get monitor details
+print(f"Monitors: {len(info['monitors'])}")
 ```
 
-### Keyboard Control  
-```python
-from debug_input import test_direct_typing
+## Testing
 
-# Type text automatically
-test_direct_typing()
-```
-
-### Quick Test
 ```bash
-python3 clicker.py
+# Install with dev dependencies
+pip install -e .
+
+# Run tests
+pytest                    # All tests
+pytest -m "not slow"      # Fast tests only
 ```
 
 ## How It Works
 
-- **Mouse**: Uses `uinput` to create virtual input devices (bypasses Wayland restrictions)
-- **Keyboard**: Uses `pynput` (works natively on Wayland)
+Uses low-level system tools to provide complete automation capabilities:
+- **Mouse**: `uinput` virtual mouse devices for clicking
+- **Keyboard**: `uinput` virtual keyboard devices for text input  
+- **Screenshots**: `grim` command for Wayland-native screen capture
 
-## Files
+## System Requirements
 
-- `clicker.py` - Main mouse automation functions
-- `debug_input.py` - Keyboard automation and system info
-- `uinput_clicker.py` - Extended mouse testing tools
+- **OS**: Linux with Wayland compositor
+- **Tested on**: Sway window manager  
+- **Python**: 3.6+

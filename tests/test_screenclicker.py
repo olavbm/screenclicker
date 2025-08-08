@@ -185,8 +185,6 @@ def test_screen_capture():
     print("✓ Monitor screenshot working")
 
 
-
-
 def test_screen_info():
     """Test screen information functionality.""" 
     print("\n=== Testing Screen Info ===")
