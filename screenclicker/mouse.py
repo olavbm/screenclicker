@@ -51,23 +51,23 @@ def left_click(x, y):
         time.sleep(0.05)
         device.emit(uinput.BTN_LEFT, 0)
         device.syn()
-        return True
     finally:
         device.destroy()
+    return True
 
 
 def move_mouse(x, y):
     """Move mouse cursor to coordinates with visible movement.
     
     Uses ydotool for Wayland-compatible cursor movement without requiring
-    special permissions. Falls back to uinput if ydotool is not available.
+    special permissions.
     
     Args:
         x: X coordinate
         y: Y coordinate
         
     Returns:
-        bool: True if successful, False otherwise
+        bool: True if successful. Raises an error otherwise.
     """
     try:
         # Primary method: use ydotool (works on Wayland without special permissions)
