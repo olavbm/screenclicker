@@ -106,6 +106,7 @@ The library is now organized into modular files for better maintainability:
   - Install: `sudo apt install grim`
 - `ollama` (optional) - Local LLM server for AI integration
   - Install: Follow instructions at https://ollama.com/
+  - For full test coverage: `ollama pull gemma3:27b`
 
 ## Usage Examples
 
@@ -179,7 +180,8 @@ if client.is_connected():
   - **Slow tests** (2): Terminal automation workflows, integration testing  
 - **Ollama Tests**: 11 integration tests for LLM functionality
   - **All tests** are slow (real server integration testing)
-  - Real Ollama server required, graceful skipping when unavailable
+  - Requires Ollama server with **gemma3:27b model** specifically
+  - Tests skip gracefully with clear messages when model unavailable
 
 **Test coverage**:
 - `test_mouse_operations()` - Mouse click operations across coordinate ranges
@@ -189,14 +191,14 @@ if client.is_connected():
 - `test_screen_info()` - Monitor detection and information gathering
 - `test_terminal_automation()` - Complete terminal workflow automation (slow)
 - `test_integration_workflow()` - Combined mouse + keyboard operations (slow)
-- `test_ollama_*()` - 11 comprehensive Ollama integration tests
+- `test_ollama_*()` - 11 comprehensive Ollama integration tests (requires gemma3:27b model)
 
 **Run tests**:
 ```bash
-pytest                              # All tests (18 tests total, requires Ollama for full coverage)
+pytest                              # All tests (18 tests total, requires Ollama + gemma3:27b for full coverage)
 pytest -m "not slow"                # Fast tests only (5 tests, ~17 seconds)
 pytest tests/test_screenclicker.py  # ScreenClicker tests only (7 tests)
-pytest tests/test_ollama.py         # Ollama integration tests only (11 tests)
+pytest tests/test_ollama.py         # Ollama integration tests only (11 tests, requires gemma3:27b)
 ```
 
 ## Development Journey
@@ -211,7 +213,9 @@ pytest tests/test_ollama.py         # Ollama integration tests only (11 tests)
 8. **Test Optimization**: Streamlined from 8 to 7 tests, eliminated redundancy, added circular movement
 9. **Ollama Integration**: Added comprehensive local LLM support with full client and convenience functions
 10. **Repository Cleanup**: Added proper .gitignore and removed cache files from version control
-11. **Final Achievement**: Production-ready modular Wayland automation + AI platform
+11. **Global Configuration**: Added configuration system for Ollama hostname, port, and model settings
+12. **Test Standardization**: Updated Ollama tests to use gemma3:27b model specifically for consistency
+13. **Final Achievement**: Production-ready modular Wayland automation + AI platform
 
 ## Architecture & Security
 
