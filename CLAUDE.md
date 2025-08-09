@@ -23,12 +23,16 @@ The library is now organized into modular files for better maintainability:
   - `screenshot_region(x, y, width, height, output_path=None)` - Capture screen regions
   - `screenshot_monitor(monitor_index=0, output_path=None)` - Capture specific monitor for ViT workflows
   - `get_screen_info()` - Get monitor layout and resolution information
-- **`ollama_client.py`** - Local LLM integration module:
-  - `OllamaClient()` - Full-featured client for Ollama server interactions
-  - `quick_chat(model, prompt)` - Simple chat completion function
-  - `quick_generate(model, prompt)` - Simple text generation function
+- **`ollama_client.py`** - Local LLM and VLM integration module:
+  - `OllamaClient()` - Full-featured client for Ollama server interactions with image support
+  - `quick_chat(model, prompt, images)` - Chat completion with optional image input
+  - `quick_generate(model, prompt, images)` - Text generation with optional image input
+  - `describe_image(image_bytes, prompt)` - Analyze images using vision language models
+  - `screenshot_and_describe(prompt, monitor)` - One-liner screenshot analysis
+  - `data_from_path(file_path)` - Load image data from file paths
+  - `describe_image_from_path(file_path, prompt)` - Analyze images directly from files
 
-**Complete API (11 functions)**: All functions available via single import from main package.
+**Complete API (17 functions)**: All functions available via single import from main package.
 
 ### Testing Suite (`tests/`)
 - **`test_screenclicker.py`** - Streamlined test suite with 7 comprehensive tests:
@@ -74,12 +78,14 @@ The library is now organized into modular files for better maintainability:
 - **ViT Integration**: New `screenshot_monitor()` function optimized for Vision AI workflows
 - **Status**: ✅ **Fully Working** with comprehensive capture options
 
-### Local LLM Integration (Ollama Solution)
-- **Implementation**: Full-featured client for locally hosted Ollama servers
-- **Capabilities**: Chat completion, text generation, streaming responses, model management
-- **API Support**: List models, show details, pull models, generate embeddings
+### Local LLM and VLM Integration (Ollama Solution)
+- **Implementation**: Full-featured client for locally hosted Ollama servers with multimodal support
+- **Text Capabilities**: Chat completion, text generation, streaming responses, model management
+- **Vision Capabilities**: Image analysis, screenshot description, file-based image processing
+- **API Support**: List models, show details, pull models, generate embeddings, image + text input
 - **Connection Management**: Robust connection testing with graceful fallbacks
-- **Status**: ✅ **Fully Working** with comprehensive real-server testing
+- **Default Model**: gemma3:27b (supports both text and image processing)
+- **Status**: ✅ **Fully Working** with comprehensive real-server testing and VLM integration
 
 ### Key Breakthroughs
 1. **Mouse automation**: uinput virtual devices bypass Wayland mouse restrictions
@@ -89,7 +95,8 @@ The library is now organized into modular files for better maintainability:
 5. **Modular architecture**: Clean separation of concerns with mouse, keyboard, screen, and ollama modules
 6. **Monitor-specific capture**: Direct monitor screenshot capability for ViT and AI workflows
 7. **Local LLM integration**: Full Ollama client with streaming, model management, and robust testing
-8. **Test methodology**: Comprehensive pytest suites with real integration testing and graceful fallbacks
+8. **Vision Language Model integration**: Complete VLM workflow with gemma3:27b multimodal support
+9. **Test methodology**: Comprehensive pytest suites with real integration testing and graceful fallbacks
 
 ## Dependencies
 
@@ -104,18 +111,20 @@ The library is now organized into modular files for better maintainability:
   - Install: `sudo apt install ydotool`
 - `grim` - Wayland screenshot capture
   - Install: `sudo apt install grim`
-- `ollama` (optional) - Local LLM server for AI integration
+- `ollama` (optional) - Local LLM and VLM server for AI integration
   - Install: Follow instructions at https://ollama.com/
+  - For text + image processing: `ollama pull gemma3:27b`
   - For full test coverage: `ollama pull gemma3:27b`
 
 ## Usage Examples
 
 ```python
-# Complete API - works on Wayland/Sway (now with modular structure + Ollama)
+# Complete API - works on Wayland/Sway (now with modular structure + VLM integration)
 from screenclicker import (
     right_click, left_click, move_mouse, text, 
     screenshot, screenshot_region, screenshot_monitor, get_screen_info,
-    OllamaClient, quick_chat, quick_generate
+    OllamaClient, quick_chat, quick_generate,
+    describe_image, screenshot_and_describe, data_from_path, describe_image_from_path
 )
 
 # Mouse operations (from mouse.py)
@@ -139,25 +148,41 @@ monitor_bytes = screenshot_monitor(1)  # Capture external monitor
 info = get_screen_info()
 print(f"Detected {len(info['monitors'])} monitors")
 
-# Vision AI workflow example
+# VLM (Vision Language Model) integration - Complete workflow
+# Method 1: Screenshot analysis
 screenshot_data = screenshot_monitor(1)  # Capture 4K monitor
-# ... process with ViT model ...
-move_mouse(predicted_x, predicted_y)    # Move to predicted location
-left_click(predicted_x, predicted_y)    # Click at prediction
+description = describe_image(screenshot_data, "What applications are visible on this screen?")
+print(description)
 
-# Local LLM integration (from ollama_client.py)
-# Quick usage
-response = quick_chat("llama2", "What should I do next?")
-generated_text = quick_generate("llama2", "Write a haiku about automation")
+# Method 2: One-liner screenshot analysis  
+description = screenshot_and_describe("Describe the desktop and find any buttons")
 
-# Full client with streaming
+# Method 3: File-based image analysis
+image_data = data_from_path("path/to/screenshot.jpg")
+description = describe_image(image_data, "What do you see?")
+
+# Method 4: File analysis one-liner
+description = describe_image_from_path("data/sc.jpg", "What type of content is this?")
+
+# Text-only LLM integration (uses gemma3:27b by default)
+response = quick_chat(prompt="What should I do next?")
+generated_text = quick_generate(prompt="Write a haiku about automation")
+
+# VLM + Automation workflow example
+description = screenshot_and_describe("Find the login button")
+# Parse description to find coordinates, then click
+# left_click(predicted_x, predicted_y)    # Click based on VLM analysis
+
+# Full client with streaming (supports both text and images)
 client = OllamaClient()
 if client.is_connected():
     models = client.list()
     print(f"Available models: {[m['name'] for m in models['models']]}")
     
-    # Streaming chat
-    for chunk in client.chat("llama2", [{"role": "user", "content": "Hello!"}], stream=True):
+    # Streaming chat with image
+    screenshot_data = screenshot()
+    for chunk in client.chat("gemma3:27b", [{"role": "user", "content": "What's on screen?"}], 
+                            images=[screenshot_data], stream=True):
         print(chunk['message']['content'], end='', flush=True)
 ```
 
@@ -215,7 +240,10 @@ pytest tests/test_ollama.py         # Ollama integration tests only (11 tests, r
 10. **Repository Cleanup**: Added proper .gitignore and removed cache files from version control
 11. **Global Configuration**: Added configuration system for Ollama hostname, port, and model settings
 12. **Test Standardization**: Updated Ollama tests to use gemma3:27b model specifically for consistency
-13. **Final Achievement**: Production-ready modular Wayland automation + AI platform
+13. **System Prompt Support**: Added configurable system prompts for customized LLM behavior
+14. **Vision Language Model Integration**: Complete VLM workflow with image analysis and file helpers
+15. **Multimodal Default**: Updated to gemma3:27b as default model supporting both text and images
+16. **Final Achievement**: Production-ready modular Wayland automation + VLM platform
 
 ## Architecture & Security
 
@@ -225,7 +253,7 @@ pytest tests/test_ollama.py         # Ollama integration tests only (11 tests, r
 - **Keyboard input**: Pure uinput virtual devices for consistent cross-application input
 - **Process management**: Direct subprocess control for reliable application launching
 - **Focus management**: Click-to-focus ensures input reaches correct applications
-- **AI Integration**: Secure local LLM access via Ollama with no external API calls
+- **AI Integration**: Secure local LLM and VLM access via Ollama with no external API calls
 - **Wayland compliance**: Works within security model using kernel-level virtual devices and system tools
 
 ## Real-World Applications
@@ -242,6 +270,9 @@ pytest tests/test_ollama.py         # Ollama integration tests only (11 tests, r
 - ✅ Cross-application input consistency (existing and newly spawned processes)
 - ✅ **Vision AI workflows**: Monitor-specific screenshot capture optimized for ViT processing
 - ✅ **Local LLM workflows**: Chat completion, text generation, streaming responses with Ollama
-- ✅ **AI-guided automation**: Combine screen capture + LLM analysis + automated actions
+- ✅ **VLM Integration**: Complete vision-language model workflow with image analysis
+- ✅ **Screenshot Analysis**: Real-time screen content description using gemma3:27b
+- ✅ **File-based Image Processing**: Direct image analysis from file paths with convenience helpers
+- ✅ **AI-guided automation**: Combine screen capture + VLM analysis + automated actions
 
-**Production ready**: Complete modular automation + AI platform with minimal dependencies provides reliable GUI testing, process automation, screen analysis, ViT-controlled automation, and local LLM integration on Wayland systems. Clean architecture supports easy maintenance and extension.
+**Production ready**: Complete modular automation + VLM platform with minimal dependencies provides reliable GUI testing, process automation, screen analysis, VLM-controlled automation, and local multimodal AI integration on Wayland systems. Clean architecture supports easy maintenance and extension.

@@ -18,10 +18,10 @@ System dependencies:
 from .mouse import right_click, left_click, move_mouse
 from .keyboard import text
 from .screen import screenshot, screenshot_region, get_screen_info, screenshot_monitor
-from .ollama_client import OllamaClient, quick_chat, quick_generate
+from .ollama_client import OllamaClient, quick_chat, quick_generate, describe_image, screenshot_and_describe, data_from_path, describe_image_from_path
 from .config import (
-    get_config, set_config, set_host, set_port, set_model, 
-    get_url, get_model, reset_config
+    get_config, set_config, set_host, set_port, set_model, set_system_prompt,
+    get_url, get_model, get_system_prompt, reset_config
 )
 
 __version__ = "0.1.0"
@@ -38,12 +38,18 @@ __all__ = [
     "OllamaClient",
     "quick_chat",
     "quick_generate",
+    "describe_image",
+    "screenshot_and_describe",
+    "data_from_path",
+    "describe_image_from_path",
     "get_config",
     "set_config", 
     "set_host", 
     "set_port", 
     "set_model",
+    "set_system_prompt",
     "get_url",
     "get_model",
+    "get_system_prompt",
     "reset_config"
 ]
