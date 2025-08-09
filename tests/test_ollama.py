@@ -1,6 +1,6 @@
 """
 Tests for Ollama client functionality.
-Tests require a running Ollama server with at least one model available.
+Tests require a running Ollama server with gemma3:27b model available.
 """
 
 import pytest
@@ -14,6 +14,7 @@ class TestOllamaIntegration:
         """Setup test fixtures."""
         self.host = "http://localhost:11434"
         self.client = OllamaClient()
+        self.test_model = "gemma3:27b"
         
     @pytest.mark.slow
     def test_connection_check(self):
@@ -48,9 +49,12 @@ class TestOllamaIntegration:
         if len(models['models']) == 0:
             pytest.skip("No models available")
             
-        # Use the first available model
-        model_name = models['models'][0]['name']
-        details = self.client.show(model_name)
+        # Check if test model is available
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
+            
+        details = self.client.show(self.test_model)
         
         # Check that we got model details response
         assert isinstance(details, dict)
@@ -65,21 +69,20 @@ class TestOllamaIntegration:
         if not self.client.is_connected():
             pytest.skip("Ollama server not available")
             
+        # Check if test model is available
         models = self.client.list()
-        if len(models['models']) == 0:
-            pytest.skip("No models available")
-            
-        # Use first available model for testing
-        model_name = models['models'][0]['name']
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
         prompt = "Say 'Hello' in one word."
         
         try:
-            response = self.client.generate(model_name, prompt)
+            response = self.client.generate(self.test_model, prompt)
             assert 'response' in response
             assert isinstance(response['response'], str)
             assert len(response['response']) > 0
         except Exception as e:
-            pytest.skip(f"Model {model_name} failed to generate: {e}")
+            pytest.skip(f"Model {self.test_model} failed to generate: {e}")
             
     @pytest.mark.slow
     def test_chat_interaction(self):
@@ -87,22 +90,21 @@ class TestOllamaIntegration:
         if not self.client.is_connected():
             pytest.skip("Ollama server not available")
             
+        # Check if test model is available
         models = self.client.list()
-        if len(models['models']) == 0:
-            pytest.skip("No models available")
-            
-        # Use first available model
-        model_name = models['models'][0]['name']
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
         messages = [{"role": "user", "content": "Say 'Hi' in one word."}]
         
         try:
-            response = self.client.chat(model_name, messages)
+            response = self.client.chat(self.test_model, messages)
             assert 'message' in response
             assert 'content' in response['message']
             assert isinstance(response['message']['content'], str)
             assert len(response['message']['content']) > 0
         except Exception as e:
-            pytest.skip(f"Model {model_name} failed to chat: {e}")
+            pytest.skip(f"Model {self.test_model} failed to chat: {e}")
             
     @pytest.mark.slow
     def test_streaming_chat(self):
@@ -110,15 +112,15 @@ class TestOllamaIntegration:
         if not self.client.is_connected():
             pytest.skip("Ollama server not available")
             
+        # Check if test model is available
         models = self.client.list()
-        if len(models['models']) == 0:
-            pytest.skip("No models available")
-            
-        model_name = models['models'][0]['name']
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
         messages = [{"role": "user", "content": "Count from 1 to 3."}]
         
         try:
-            stream = self.client.chat(model_name, messages, stream=True)
+            stream = self.client.chat(self.test_model, messages, stream=True)
             chunks = []
             for chunk in stream:
                 chunks.append(chunk)
@@ -129,7 +131,7 @@ class TestOllamaIntegration:
             # Last chunk should be marked as done
             assert chunks[-1].get('done', False) is True
         except Exception as e:
-            pytest.skip(f"Model {model_name} failed streaming chat: {e}")
+            pytest.skip(f"Model {self.test_model} failed streaming chat: {e}")
             
     @pytest.mark.slow
     def test_streaming_generation(self):
@@ -137,15 +139,15 @@ class TestOllamaIntegration:
         if not self.client.is_connected():
             pytest.skip("Ollama server not available")
             
+        # Check if test model is available
         models = self.client.list()
-        if len(models['models']) == 0:
-            pytest.skip("No models available")
-            
-        model_name = models['models'][0]['name']
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
         prompt = "Count from 1 to 3."
         
         try:
-            stream = self.client.generate(model_name, prompt, stream=True)
+            stream = self.client.generate(self.test_model, prompt, stream=True)
             chunks = []
             for chunk in stream:
                 chunks.append(chunk)
@@ -155,7 +157,7 @@ class TestOllamaIntegration:
             assert len(chunks) > 0
             assert chunks[-1].get('done', False) is True
         except Exception as e:
-            pytest.skip(f"Model {model_name} failed streaming generation: {e}")
+            pytest.skip(f"Model {self.test_model} failed streaming generation: {e}")
             
     @pytest.mark.slow
     def test_embeddings(self):
@@ -163,21 +165,20 @@ class TestOllamaIntegration:
         if not self.client.is_connected():
             pytest.skip("Ollama server not available")
             
+        # Check if test model is available
         models = self.client.list()
-        if len(models['models']) == 0:
-            pytest.skip("No models available")
-            
-        # Not all models support embeddings, try first model
-        model_name = models['models'][0]['name']
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
         prompt = "This is a test sentence."
         
         try:
-            response = self.client.embeddings(model_name, prompt)
+            response = self.client.embeddings(self.test_model, prompt)
             assert 'embedding' in response
             assert isinstance(response['embedding'], list)
             assert len(response['embedding']) > 0
         except Exception as e:
-            pytest.skip(f"Model {model_name} doesn't support embeddings: {e}")
+            pytest.skip(f"Model {self.test_model} doesn't support embeddings: {e}")
             
     @pytest.mark.slow  
     def test_convenience_functions(self):
@@ -185,27 +186,27 @@ class TestOllamaIntegration:
         if not self.client.is_connected():
             pytest.skip("Ollama server not available")
             
+        # Check if test model is available
         models = self.client.list()
-        if len(models['models']) == 0:
-            pytest.skip("No models available")
-            
-        model_name = models['models'][0]['name']
+        model_names = [m['name'] for m in models['models']]
+        if self.test_model not in model_names:
+            pytest.skip(f"Test model {self.test_model} not available. Available: {model_names}")
         
         # Test quick_chat
         try:
-            chat_result = quick_chat(model_name, "Say 'Hello'")
+            chat_result = quick_chat(self.test_model, "Say 'Hello'")
             assert isinstance(chat_result, str)
             assert len(chat_result) > 0
         except Exception as e:
-            pytest.skip(f"quick_chat failed with {model_name}: {e}")
+            pytest.skip(f"quick_chat failed with {self.test_model}: {e}")
             
         # Test quick_generate  
         try:
-            generate_result = quick_generate(model_name, "Say 'World'")
+            generate_result = quick_generate(self.test_model, "Say 'World'")
             assert isinstance(generate_result, str)
             assert len(generate_result) > 0
         except Exception as e:
-            pytest.skip(f"quick_generate failed with {model_name}: {e}")
+            pytest.skip(f"quick_generate failed with {self.test_model}: {e}")
             
     @pytest.mark.slow
     def test_custom_client_config(self):
