@@ -19,6 +19,10 @@ from .mouse import right_click, left_click, move_mouse
 from .keyboard import text
 from .screen import screenshot, screenshot_region, get_screen_info, screenshot_monitor
 from .ollama_client import OllamaClient, quick_chat, quick_generate
+from .config import (
+    get_config, set_config, set_host, set_port, set_model, 
+    get_url, get_model, reset_config
+)
 
 __version__ = "0.1.0"
 __author__ = "ScreenClicker Development Team"
@@ -33,5 +37,13 @@ __all__ = [
     "get_screen_info",
     "OllamaClient",
     "quick_chat",
-    "quick_generate"
+    "quick_generate",
+    "get_config",
+    "set_config", 
+    "set_host", 
+    "set_port", 
+    "set_model",
+    "get_url",
+    "get_model",
+    "reset_config"
 ]

@@ -4,20 +4,22 @@ Ollama client module for local LLM interactions.
 
 import ollama
 from typing import Optional, Dict, Any, List, Union
+from .config import get_config
 
 
 class OllamaClient:
     """Client for interacting with locally hosted Ollama server."""
     
-    def __init__(self, host: str = "http://localhost:11434", **kwargs):
+    def __init__(self, host: Optional[str] = None, **kwargs):
         """Initialize Ollama client.
         
         Args:
-            host: Ollama server host URL
+            host: Ollama server host URL (uses global config if None)
             **kwargs: Additional arguments passed to ollama.Client
         """
-        self.host = host
-        self.client = ollama.Client(host=host, **kwargs)
+        config = get_config()
+        self.host = host if host is not None else config.url
+        self.client = ollama.Client(host=self.host, **kwargs)
     
     def chat(self, model: str, messages: List[Dict[str, str]], 
              stream: bool = False, **kwargs) -> Union[Dict[str, Any], Any]:
@@ -118,34 +120,52 @@ class OllamaClient:
 
 
 # Convenience functions for quick usage
-def quick_chat(model: str, prompt: str, host: str = "http://localhost:11434") -> str:
+def quick_chat(model: Optional[str] = None, prompt: str = "", host: Optional[str] = None) -> str:
     """Quick chat completion.
     
     Args:
-        model: Model name
+        model: Model name (uses global config default if None)
         prompt: User prompt
-        host: Ollama server host
+        host: Ollama server host (uses global config if None)
         
     Returns:
         Generated response text
     """
-    response = ollama.chat(
-        model=model,
-        messages=[{"role": "user", "content": prompt}]
-    )
+    config = get_config()
+    actual_model = model if model is not None else config.model
+    
+    if host is not None:
+        # Use custom host
+        client = OllamaClient(host=host)
+        response = client.chat(actual_model, [{"role": "user", "content": prompt}])
+    else:
+        # Use global config
+        response = ollama.chat(
+            model=actual_model,
+            messages=[{"role": "user", "content": prompt}]
+        )
     return response['message']['content']
 
 
-def quick_generate(model: str, prompt: str, host: str = "http://localhost:11434") -> str:
+def quick_generate(model: Optional[str] = None, prompt: str = "", host: Optional[str] = None) -> str:
     """Quick text generation.
     
     Args:
-        model: Model name
+        model: Model name (uses global config default if None)
         prompt: Input prompt
-        host: Ollama server host
+        host: Ollama server host (uses global config if None)
         
     Returns:
         Generated text
     """
-    response = ollama.generate(model=model, prompt=prompt)
+    config = get_config()
+    actual_model = model if model is not None else config.model
+    
+    if host is not None:
+        # Use custom host
+        client = OllamaClient(host=host)
+        response = client.generate(actual_model, prompt)
+    else:
+        # Use global config
+        response = ollama.generate(model=actual_model, prompt=prompt)
     return response['response']
