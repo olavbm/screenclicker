@@ -18,6 +18,7 @@ System dependencies:
 from .mouse import right_click, left_click, move_mouse
 from .keyboard import text
 from .screen import screenshot, screenshot_region, get_screen_info, screenshot_monitor
+from .ollama_client import OllamaClient, quick_chat, quick_generate
 
 __version__ = "0.1.0"
 __author__ = "ScreenClicker Development Team"
@@ -29,5 +30,8 @@ __all__ = [
     "screenshot", 
     "screenshot_region", 
     "screenshot_monitor",
-    "get_screen_info"
+    "get_screen_info",
+    "OllamaClient",
+    "quick_chat",
+    "quick_generate"
 ]
