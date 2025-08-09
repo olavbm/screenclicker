@@ -23,8 +23,12 @@ The library is now organized into modular files for better maintainability:
   - `screenshot_region(x, y, width, height, output_path=None)` - Capture screen regions
   - `screenshot_monitor(monitor_index=0, output_path=None)` - Capture specific monitor for ViT workflows
   - `get_screen_info()` - Get monitor layout and resolution information
+- **`ollama_client.py`** - Local LLM integration module:
+  - `OllamaClient()` - Full-featured client for Ollama server interactions
+  - `quick_chat(model, prompt)` - Simple chat completion function
+  - `quick_generate(model, prompt)` - Simple text generation function
 
-**Complete API (8 functions)**: All functions available via single import from main package.
+**Complete API (11 functions)**: All functions available via single import from main package.
 
 ### Testing Suite (`tests/`)
 - **`test_screenclicker.py`** - Streamlined test suite with 7 comprehensive tests:
@@ -35,12 +39,20 @@ The library is now organized into modular files for better maintainability:
   - `test_screen_info()` - Monitor detection and information gathering
   - `test_terminal_automation()` - Complete terminal workflow automation (slow)
   - `test_integration_workflow()` - Combined mouse + keyboard operations (slow)
+- **`test_ollama.py`** - Comprehensive Ollama integration tests with 11 tests:
+  - Real server integration testing (no mocks)
+  - Connection and model management validation
+  - Chat and text generation with streaming support
+  - Error handling for non-existent models
+  - Convenience function testing
+  - All tests skip gracefully when Ollama server unavailable
 
 ### Package Structure
 - **`setup.py`** - Package configuration and dependencies
 - **`pytest.ini`** - Test configuration and markers
 - **`requirements.txt`** - Project dependencies
 - **`README.md`** - Quick start guide and usage
+- **`.gitignore`** - Comprehensive Python project gitignore
 
 ## Technical Implementation
 
@@ -62,19 +74,29 @@ The library is now organized into modular files for better maintainability:
 - **ViT Integration**: New `screenshot_monitor()` function optimized for Vision AI workflows
 - **Status**: ✅ **Fully Working** with comprehensive capture options
 
+### Local LLM Integration (Ollama Solution)
+- **Implementation**: Full-featured client for locally hosted Ollama servers
+- **Capabilities**: Chat completion, text generation, streaming responses, model management
+- **API Support**: List models, show details, pull models, generate embeddings
+- **Connection Management**: Robust connection testing with graceful fallbacks
+- **Status**: ✅ **Fully Working** with comprehensive real-server testing
+
 ### Key Breakthroughs
 1. **Mouse automation**: uinput virtual devices bypass Wayland mouse restrictions
 2. **Keyboard automation**: Pure uinput solution provides consistent text input across all applications
 3. **Screen capture**: grim integration provides native Wayland screenshot capabilities
 4. **Cursor movement**: ydotool provides smooth visible movement without special permissions
-5. **Modular architecture**: Clean separation of concerns with mouse, keyboard, and screen modules
+5. **Modular architecture**: Clean separation of concerns with mouse, keyboard, screen, and ollama modules
 6. **Monitor-specific capture**: Direct monitor screenshot capability for ViT and AI workflows
-7. **Test methodology**: Streamlined pytest suite with circular cursor movement and comprehensive coverage
+7. **Local LLM integration**: Full Ollama client with streaming, model management, and robust testing
+8. **Test methodology**: Comprehensive pytest suites with real integration testing and graceful fallbacks
 
 ## Dependencies
 
 ### Python Dependencies
 - `python-uinput>=1.0.1` - Low-level input device creation for mouse and keyboard
+- `Pillow>=8.0.0` - Image processing and manipulation capabilities
+- `ollama>=0.1.0` - Official Ollama Python client for local LLM integration
 - `pytest>=7.0.0` - Testing framework
 
 ### System Dependencies  
@@ -82,14 +104,17 @@ The library is now organized into modular files for better maintainability:
   - Install: `sudo apt install ydotool`
 - `grim` - Wayland screenshot capture
   - Install: `sudo apt install grim`
+- `ollama` (optional) - Local LLM server for AI integration
+  - Install: Follow instructions at https://ollama.com/
 
 ## Usage Examples
 
 ```python
-# Complete API - works on Wayland/Sway (now with modular structure)
+# Complete API - works on Wayland/Sway (now with modular structure + Ollama)
 from screenclicker import (
     right_click, left_click, move_mouse, text, 
-    screenshot, screenshot_region, screenshot_monitor, get_screen_info
+    screenshot, screenshot_region, screenshot_monitor, get_screen_info,
+    OllamaClient, quick_chat, quick_generate
 )
 
 # Mouse operations (from mouse.py)
@@ -118,6 +143,21 @@ screenshot_data = screenshot_monitor(1)  # Capture 4K monitor
 # ... process with ViT model ...
 move_mouse(predicted_x, predicted_y)    # Move to predicted location
 left_click(predicted_x, predicted_y)    # Click at prediction
+
+# Local LLM integration (from ollama_client.py)
+# Quick usage
+response = quick_chat("llama2", "What should I do next?")
+generated_text = quick_generate("llama2", "Write a haiku about automation")
+
+# Full client with streaming
+client = OllamaClient()
+if client.is_connected():
+    models = client.list()
+    print(f"Available models: {[m['name'] for m in models['models']]}")
+    
+    # Streaming chat
+    for chunk in client.chat("llama2", [{"role": "user", "content": "Hello!"}], stream=True):
+        print(chunk['message']['content'], end='', flush=True)
 ```
 
 ## Environment Compatibility
@@ -129,26 +169,34 @@ left_click(predicted_x, predicted_y)    # Click at prediction
 - **Keyboard**: ✅ **Fully Working** via pure uinput implementation
 - **Terminal automation**: ✅ **Fully Working** with direct process management
 - **Multi-monitor**: ✅ **Fully Working** with individual monitor capture
+- **Local LLMs**: ✅ **Fully Working** with Ollama server integration
 
 ## Testing & Quality Assurance
 
-**Test Suite**: 7 streamlined tests using pytest (cleaned up from 8, eliminated redundancy)
-- **Fast tests** (5): Core functionality validation, streamlined for efficiency
-- **Slow tests** (2): Terminal automation workflows, integration testing  
-- **Test coverage**:
-  - `test_mouse_operations()` - Mouse click operations across coordinate ranges
-  - `test_keyboard_operations()` - Text input with various character sets and symbols
-  - `test_cursor_movement()` - Smooth circular cursor movement (24-point circle)
-  - `test_screen_capture()` - All screenshot functions including new monitor capture
-  - `test_screen_info()` - Monitor detection and information gathering
-  - `test_terminal_automation()` - Complete terminal workflow automation (slow)
-  - `test_integration_workflow()` - Combined mouse + keyboard operations (slow)
+**Test Suite**: 18 comprehensive tests across 2 test files
+- **ScreenClicker Tests**: 7 streamlined tests for core automation functionality
+  - **Fast tests** (5): Core functionality validation, streamlined for efficiency
+  - **Slow tests** (2): Terminal automation workflows, integration testing  
+- **Ollama Tests**: 11 integration tests for LLM functionality
+  - **All tests** are slow (real server integration testing)
+  - Real Ollama server required, graceful skipping when unavailable
+
+**Test coverage**:
+- `test_mouse_operations()` - Mouse click operations across coordinate ranges
+- `test_keyboard_operations()` - Text input with various character sets and symbols
+- `test_cursor_movement()` - Smooth circular cursor movement (24-point circle)
+- `test_screen_capture()` - All screenshot functions including monitor capture
+- `test_screen_info()` - Monitor detection and information gathering
+- `test_terminal_automation()` - Complete terminal workflow automation (slow)
+- `test_integration_workflow()` - Combined mouse + keyboard operations (slow)
+- `test_ollama_*()` - 11 comprehensive Ollama integration tests
 
 **Run tests**:
 ```bash
-pytest                    # All tests (7 tests total)
-pytest -m "not slow"      # Fast tests only (5 tests, ~17 seconds)
-pytest tests/test_screenclicker.py  # Run specific test file
+pytest                              # All tests (18 tests total, requires Ollama for full coverage)
+pytest -m "not slow"                # Fast tests only (5 tests, ~17 seconds)
+pytest tests/test_screenclicker.py  # ScreenClicker tests only (7 tests)
+pytest tests/test_ollama.py         # Ollama integration tests only (11 tests)
 ```
 
 ## Development Journey
@@ -161,16 +209,19 @@ pytest tests/test_screenclicker.py  # Run specific test file
 6. **Modular Refactor**: Reorganized monolithic code into clean mouse/keyboard/screen modules
 7. **ViT Integration**: Added `screenshot_monitor()` for Vision AI workflows
 8. **Test Optimization**: Streamlined from 8 to 7 tests, eliminated redundancy, added circular movement
-9. **Final Achievement**: Production-ready modular Wayland automation solution
+9. **Ollama Integration**: Added comprehensive local LLM support with full client and convenience functions
+10. **Repository Cleanup**: Added proper .gitignore and removed cache files from version control
+11. **Final Achievement**: Production-ready modular Wayland automation + AI platform
 
 ## Architecture & Security
 
-- **Modular Design**: Separated concerns into mouse.py, keyboard.py, and screen.py modules
+- **Modular Design**: Separated concerns into mouse.py, keyboard.py, screen.py, and ollama_client.py modules
 - **Mouse control**: Creates virtual mouse devices via uinput for clicks (no root required)
 - **Cursor movement**: Uses ydotool for visible movement without special permissions
 - **Keyboard input**: Pure uinput virtual devices for consistent cross-application input
 - **Process management**: Direct subprocess control for reliable application launching
 - **Focus management**: Click-to-focus ensures input reaches correct applications
+- **AI Integration**: Secure local LLM access via Ollama with no external API calls
 - **Wayland compliance**: Works within security model using kernel-level virtual devices and system tools
 
 ## Real-World Applications
@@ -186,5 +237,7 @@ pytest tests/test_screenclicker.py  # Run specific test file
 - ✅ Integration workflows combining mouse, keyboard, cursor movement, and screen capture
 - ✅ Cross-application input consistency (existing and newly spawned processes)
 - ✅ **Vision AI workflows**: Monitor-specific screenshot capture optimized for ViT processing
+- ✅ **Local LLM workflows**: Chat completion, text generation, streaming responses with Ollama
+- ✅ **AI-guided automation**: Combine screen capture + LLM analysis + automated actions
 
-**Production ready**: Complete modular automation platform with minimal dependencies provides reliable GUI testing, process automation, screen analysis, and ViT-controlled automation on Wayland systems. Clean architecture supports easy maintenance and extension.
+**Production ready**: Complete modular automation + AI platform with minimal dependencies provides reliable GUI testing, process automation, screen analysis, ViT-controlled automation, and local LLM integration on Wayland systems. Clean architecture supports easy maintenance and extension.
