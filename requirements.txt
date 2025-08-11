@@ -2,6 +2,7 @@
 python-uinput>=1.0.1
 Pillow>=8.0.0
 ollama>=0.1.0
+openai>=1.0.0
 
 # System dependencies (install via package manager)
 # - ydotool: For Wayland-compatible cursor movement

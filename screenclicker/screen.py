@@ -128,7 +128,7 @@ def get_screen_info():
                             'x': rect.get('x', 0),
                             'y': rect.get('y', 0),
                             'width': rect.get('width', 1920),
-                            'height': rect.get('height', 1080),
+                            'height': rect.get('height', 1200),
                             'primary': output.get('primary', False)
                         })
                 return {'monitors': monitors}
@@ -142,7 +142,7 @@ def get_screen_info():
                 'x': 0,
                 'y': 0,
                 'width': 1920,
-                'height': 1080,
+                'height': 1200,
                 'primary': True
             }]
         }
@@ -155,7 +155,7 @@ def get_screen_info():
                 'x': 0,
                 'y': 0,
                 'width': 1920,
-                'height': 1080,
+                'height': 1200,
                 'primary': True
             }]
         }

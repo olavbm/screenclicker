@@ -31,8 +31,16 @@ The library is now organized into modular files for better maintainability:
   - `screenshot_and_describe(prompt, monitor)` - One-liner screenshot analysis
   - `data_from_path(file_path)` - Load image data from file paths
   - `describe_image_from_path(file_path, prompt)` - Analyze images directly from files
+- **`openrouter_client.py`** - Cloud LLM and VLM integration module:
+  - `OpenRouterClient()` - OpenRouter API client with vision model support  
+  - `openrouter_chat(prompt, images, api_key)` - Chat completion with cloud models
+  - `openrouter_generate(prompt, images, api_key)` - Text generation with cloud models
+  - `openrouter_describe_image(image_bytes, prompt, api_key)` - Cloud-based image analysis
+  - `openrouter_screenshot_describe(prompt, api_key)` - Live screenshot analysis with cloud AI
+  - `openrouter_describe_from_path(file_path, prompt, api_key)` - File-based image analysis
 
-**Complete API (17 functions)**: All functions available via single import from main package.
+**Complete API (23+ functions)**: All functions available via single import from main package.
+**Complete Screen Interaction Pipeline**: Screenshot → AI Analysis → Action automation.
 
 ### Testing Suite (`tests/`)
 - **`test_screenclicker.py`** - Streamlined test suite with 7 comprehensive tests:
@@ -87,16 +95,28 @@ The library is now organized into modular files for better maintainability:
 - **Default Model**: gemma3:27b (supports both text and image processing)
 - **Status**: ✅ **Fully Working** with comprehensive real-server testing and VLM integration
 
+### Cloud LLM and VLM Integration (OpenRouter Solution)
+- **Implementation**: OpenRouter API client using OpenAI-compatible interface for cloud AI access
+- **Text Capabilities**: Chat completion, text generation, streaming responses with premium models
+- **Vision Capabilities**: Image analysis with GPT-4o Mini, Gemini 2.0, Claude 3.5 Sonnet
+- **Free Model Support**: `google/gemma-3-27b-it:free` supports both text and image processing
+- **Premium Models**: Access to latest OpenAI, Anthropic, and Google models via API
+- **Integration**: Works alongside local Ollama for hybrid local/cloud AI workflows
+- **Status**: ✅ **Fully Working** with comprehensive vision model testing and authentication handling
+
 ### Key Breakthroughs
 1. **Mouse automation**: uinput virtual devices bypass Wayland mouse restrictions
 2. **Keyboard automation**: Pure uinput solution provides consistent text input across all applications
 3. **Screen capture**: grim integration provides native Wayland screenshot capabilities
 4. **Cursor movement**: ydotool provides smooth visible movement without special permissions
-5. **Modular architecture**: Clean separation of concerns with mouse, keyboard, screen, and ollama modules
+5. **Modular architecture**: Clean separation of concerns with mouse, keyboard, screen, ollama, and openrouter modules
 6. **Monitor-specific capture**: Direct monitor screenshot capability for ViT and AI workflows
 7. **Local LLM integration**: Full Ollama client with streaming, model management, and robust testing
-8. **Vision Language Model integration**: Complete VLM workflow with gemma3:27b multimodal support
-9. **Test methodology**: Comprehensive pytest suites with real integration testing and graceful fallbacks
+8. **Cloud LLM integration**: OpenRouter client with free gemma3 and premium vision model support
+9. **Complete screen interaction pipeline**: Screenshot → AI Analysis → Action automation workflow
+10. **Dual AI support**: Hybrid local/cloud AI with both Ollama and OpenRouter integration
+11. **Vision Language Model integration**: Complete VLM workflow with gemma3:27b multimodal support (local + cloud)
+12. **Test methodology**: Comprehensive pytest suites with real integration testing and graceful fallbacks
 
 ## Dependencies
 
@@ -104,6 +124,7 @@ The library is now organized into modular files for better maintainability:
 - `python-uinput>=1.0.1` - Low-level input device creation for mouse and keyboard
 - `Pillow>=8.0.0` - Image processing and manipulation capabilities
 - `ollama>=0.1.0` - Official Ollama Python client for local LLM integration
+- `openai>=1.0.0` - OpenAI client for OpenRouter cloud AI integration
 - `pytest>=7.0.0` - Testing framework
 
 ### System Dependencies  
