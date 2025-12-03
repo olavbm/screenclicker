@@ -12,7 +12,7 @@ class OllamaConfig:
     # Default values
     DEFAULT_HOST = "localhost"
     DEFAULT_PORT = 11434
-    DEFAULT_MODEL = "qwen3-vl:4b"
+    DEFAULT_MODEL = "qwen3-vl:30b"
     DEFAULT_SYSTEM_PROMPT = None
     
     def __init__(self):
