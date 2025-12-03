@@ -13,7 +13,7 @@ System dependencies:
 - ollama: For local VLM hosting (https://ollama.com)
 """
 
-from .mouse import right_click, left_click, move_mouse
+from .mouse import right_click, left_click, move_mouse, set_target_monitor, get_target_monitor
 from .keyboard import text
 from .screen import screenshot, screenshot_region, get_screen_info, screenshot_monitor
 from .ollama_client import (
@@ -36,6 +36,8 @@ __all__ = [
     "right_click",
     "left_click",
     "move_mouse",
+    "set_target_monitor",
+    "get_target_monitor",
 
     # Keyboard
     "text",
