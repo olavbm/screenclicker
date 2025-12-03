@@ -77,9 +77,10 @@ python chat.py -m 1 "describe this monitor"
 ```bash
 python run.py "click the start button"
 python run.py -m 1 "click the close button"
+python run.py -n 5 "click the button"  # 5 samples for averaging
 ```
 
-Both support `--monitor` / `-m` to select target monitor.
+Both support `--monitor` / `-m` to select target monitor. `run.py` also supports `--samples` / `-n` to control how many VLM predictions to average (default: 3).
 
 ## Environment
 
